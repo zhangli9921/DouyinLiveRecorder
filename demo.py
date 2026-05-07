@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
+"""直播平台解析函数演示脚本。
+
+学习提示：
+- 这个文件不是主程序，而是一个“最小测试入口”。
+- 它把不同平台的示例直播间 URL 和对应的解析函数放到 LIVE_STREAM_CONFIG 里。
+- 你想单独研究某个平台的解析逻辑时，可以先从这里改 platform，然后跟进 src/spider.py 里的对应函数。
+"""
+
 import asyncio
 from src.logger import logger
 from src import spider
 
-# 以下示例直播间链接不保证时效性，请自行查看链接是否能正常访问
-# Please note that the following example live room links may not be up-to-date
+# 以下示例直播间链接不保证时效性，请自行查看链接是否能正常访问。
+# 每个平台配置两样东西：
+# 1. url：用于测试的直播间地址。
+# 2. func：负责请求该平台页面/API，并解析直播信息的函数。
 LIVE_STREAM_CONFIG = {
     "douyin": {
         "url": "https://live.douyin.com/745964462470",
@@ -211,9 +221,18 @@ LIVE_STREAM_CONFIG = {
 
 
 def test_live_stream(platform_name: str, proxy_addr=None, cookies=None) -> None:
+    """测试某个平台的解析函数。
+
+    参数：
+    - platform_name：LIVE_STREAM_CONFIG 里的 key，例如 douyin、kuaishou。
+    - proxy_addr：可选代理地址，部分海外平台可能需要。
+    - cookies：可选登录态 Cookie，某些平台接口需要 Cookie 才能返回完整信息。
+    """
+
     if platform_name in LIVE_STREAM_CONFIG:
         config = LIVE_STREAM_CONFIG[platform_name]
         try:
+            # 大多数 spider 函数是 async 协程，所以这里用 asyncio.run 把它跑起来。
             stream_data = asyncio.run(config['func'](config['url'], proxy_addr=proxy_addr, cookies=cookies))
             logger.debug(f"Stream data for {platform_name}: {stream_data}")
         except Exception as e:
@@ -223,5 +242,6 @@ def test_live_stream(platform_name: str, proxy_addr=None, cookies=None) -> None:
 
 
 if __name__ == "__main__":
+    # 默认测试抖音。想测试其他平台，改成 LIVE_STREAM_CONFIG 里的 key 即可。
     platform = "douyin"
     test_live_stream(platform)
